@@ -1,0 +1,47 @@
+import json
+import random
+
+def load_definitions():
+    try:
+        with open("definitions.json") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+
+
+def handler(event, context):
+    definitions = load_definitions()
+    text = "Привет! Хочешь увидеть определение или добавить свое?"
+    buttons = [
+        {
+            "title": "Посмотреть",
+            "hide": True
+        },
+    ]
+
+    if "request" in event and "original_utterance" in event["request"] and len(event["request"]["original_utterance"]) > 0:
+        user_input = event["request"]["original_utterance"].lower()
+
+        if user_input == "посмотреть":
+            if definitions:
+                term = random.choice(list(definitions.keys()))
+                definition = definitions[term]
+                text = f"{term}: {definition}"
+                
+            else:
+                text = "Список определений пуст."
+
+        else:
+            text = "Некорректный ввод. Пожалуйста, попробуйте еще раз."
+            buttons = []
+
+    return {
+        "version": event["version"],
+        "session": event["session"],
+        "response": {
+            "text": text,
+            "buttons": buttons,
+            "end_session": False
+        }
+    }
